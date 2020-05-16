@@ -16,11 +16,15 @@
 8. [Functions](07_function)
 9. [Pointers](08_pointer) 
 9. [Concurrency](09_concurrency) 
-10. [Applications](15_application) 
+10. [Channels](10_channel)
+11. [Applications](15_util) 
 
 ## References
 * Go Lang spec: https://golang.org/ref/spec
 * Effective Go: https://golang.org/doc/effective_go.html
+* Go Proverbs: https://go-proverbs.github.io
+* Go Blog: https://blog.golang.org/index
+* Go Talks: https://talks.golang.org/
 * The Go Playground: https://play.golang.org/
 * Go Doc: https://godoc.org/
 * Go by Example: https://gobyexample.com/
