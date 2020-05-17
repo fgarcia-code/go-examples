@@ -1,6 +1,6 @@
 # Channels
 ## Concepts
-* A channel provides a **mechanism** for **concurrently** executing **functions** to **communicate** by **sending** and **receiving** values of a specified element type
+* A channel provides a **mechanism** for **concurrently** executing **functions** to **communicate** by **sending** and **receiving** **values** of a **specified element type**
 * Channels act as first-in-first-out queues
 ### Send statement
 * A send statement **sends** a value **on a channel**
