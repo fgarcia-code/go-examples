@@ -3,26 +3,26 @@ package main
 import "fmt"
 
 func main() {
-	// It will create a buffer `Channel`, it allows 2 elements in the buffer
-	// The buffer `Channel` will not lock the goroutine, as long as, it has only 2 elements (in this case)
+	// It will create a buffer channel, it allows 2 elements in the buffer
+	// The buffer channel will not block the goroutine, as long as, it has only 2 elements (in this case)
 	c := make(chan int, 2)
 
-	// It will send the first value into the buffer `Channel`
+	// It will send the first value into the buffer channel
 	c <- 10
 
-	// It will send the second value into the buffer `Channel`
+	// It will send the second value into the buffer channel
 	c <- 11
 
-	// The buffer `Channel` is full, if you send a third value it will lock the `main` goroutine
+	// The buffer channel is full, if you send a third value it will block the main goroutine
 	// c <- 11
 
-	// It receives the values from the buffer `Channel`
+	// It receives values from the buffer channel
 	fmt.Println("The first value in the channel is:", <-c)
 	fmt.Println("The second value in the channel is:", <-c)
 
-	// Once you have receive the values from the buffer `Channel` you can send more values, with out lock the main routine
+	// Once you have receive values from the buffer channel you can send more values, with out block the main goroutine
 	c <- 12
 
-	// It continues receiving values from the buffer `Channel`
+	// It continues receiving values from the buffer channel
 	fmt.Println("The third value in the channel is:", <-c)
 }

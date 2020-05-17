@@ -3,7 +3,7 @@ package main
 import "fmt"
 
 func main() {
-	// It create 2 `Channel` 1 for values an 1 for exit
+	// It create 2 channel 1 for values an 1 for exit
 	add := make(chan int)
 	quit := make(chan int)
 
@@ -20,10 +20,10 @@ func sender(a chan<- int, q <-chan int) {
 	// This is a infinite loop
 	for {
 		select {
-		// This will send data in this case
+		// It sends data
 		case a <- x:
 			x++
-	    // This will receive data in this case, and it will break the infinite loop
+	    // It receives data, and it will break the infinite loop
 		case <-q:
 			return
 		}
