@@ -104,15 +104,132 @@
   v, ok := <-channel
   ```
 ## Fan-In
-**A function** can read from **multiple inputs** and proceed **until** all are **closed** by **multiplexing** the **input channels** onto a **single channel** that's **closed** when **all the inputs are closed**. This is called fan-in.
+**A function** can read from **multiple inputs** and proceed **until** all are **closed** by **multiplexing** the **input channels** onto a **single channel** that's **closed** when **all the inputs are closed**. This is called fan-in. [See the example](08_fan_in.go).
+```
+  input_1 -> Channel_1 ---\
+  input_2 -> Channel_2 ----\
+  ...                       ---> Channel_out --->
+  ...                      /
+  input_n -> Channel_n ---/
+```
 ## Fan-Out
-**Multiple functions** can read from the **same channel** **until** that channel **is closed**, by **demultiplexing** the **input channel** onto a **set of channels**; this is called fan-out. This provides a way to distribute work amongst a group of workers to parallelize CPU use and I/O.
+**Multiple functions** can read from the **same channel** **until** that channel **is closed** by **demultiplexing** the **input channel** onto a **set of channels** these're **closed** when **the input channel is closed**; this is called fan-out. This provides a way to distribute work amongst a group of workers to parallelize CPU use and I/O. [See the example](09_fan_out.go)
+```
+                                     /---> Channel_output_1 --->
+                                    /----> Channel_output_2 --->
+  single_input -> Channel_input --->       ...
+                                    \      ...
+                                     \---> Channel_output_n --->
+```
 ## Context
-Package context defines the **Context type**, which carries **deadlines**, **cancellation signals**, and other **request-scoped values** across **API boundaries** and **between processes**.
-### Context Interface
+* Package context defines the **Context type**, which carries **deadlines**, **cancellation signals**, and other **request-scoped values** across **API boundaries** and **between processes**
+  ```go
+  // The Context interface in the package context
+  type Context interface {
+      Deadline() (deadline time.Time, ok bool)
+      Done() <-chan struct{}
+      Err() error
+      Value(key interface{}) interface{}
+  }
+  ```
+* One use case is for server applications when **incoming requests** to the server should **create a Context**, and **outgoing** calls to **another servers** should **accept a Context**
+  ```go
+  // Simple incoming request
+  func incomingRequest(w http.ResponseWriter, req *http.Request){ 
+      ctx := context.Context() // It doesn't work is just to demonstrate the incoming request
+  }
+ 
+  // Simple outgoing request function
+  func outgoingCall(ctx context.Context) { }
+  ```
+* **The chain of function** calls between them must **propagate the Context**, **optionally replacing** it with a **derived Context** created using WithCancel, WithDeadline, WithTimeout, or WithValue
+  ```go
+  func function1(){
+      ctx := context.Context()
+      function2(ctx)   // Chain of function propagates the context
+  }
+  
+  func function2(ctx context.Context) {
+      child_ctx := context.WithCancel(ctx) // Replacing ctx with a derived context
+      function3(child_ctx)   // Chain of function propagates the context
+  }
+  
+  func fuction3(ctx context.Context) {
+      child_ctx := context.WithTimeout(ctx, timeout) // Replacing ctx with a derived context
+  }
+  ```
+* When a **Context is canceled**, **all Contexts derived** from it are **also canceled**
+* The WithCancel, WithDeadline, and WithTimeout **functions** take a **Context (the parent)** and **return** a **derived Context (the child)** and a **CancelFunc** 
+  ```go
+  parent_ctx := context.Context() // Parent context
+  child_1_ctx, cancel_1 := context.WithCancel(parent_ctx) // Derived Context
+  child_2_ctx, cancel_2 := context.WithDeadline(chile_1_ctx, deadline) // Derived Context
+  cancel_1() // It cancels child_1_ctx and child_2_ctx
+  ``` 
 ### Parent Context
+The function `context.Context()` in the previous examples doesn't exist because the `context.Context` is an interface, to create a root parent Context you can create it with the functions `context.Background()` and `context.TODO()` as explained below.
+#### Background Context
+* Background **returns** a non-nil, **empty Context**. It is **never** **canceled**, has **no values**, and has **no deadline** 
+* It is typically used by the main function, initialization, and tests, and as the **top-level Context** for incoming requests
+  ```go
+  ctx := context.Background() // It returns an value of type `*context.emptyCtx`
+  
+  fmt.Printf("%T\n", ctx) // The type of the context
+
+  output:
+  *context.emptyCtx 
+  ```
+#### TODO Context
+* TODO **returns** a non-nil, **empty Context**. **Code should use context**
+* TODO **when it's unclear which Context to use** or it is not yet available (because the surrounding function has not yet been extended to accept a Context parameter)
+* **TODO is recognized by static analysis tools** that determine whether Contexts are propagated correctly in a program
+* **Note:** The best way to start with contexts is using `context.Background()` instead
+```go
+ctx := context.TODO() // It returns an value of type `*context.emptyCtx`
+
+fmt.Printf("%T\n", ctx) // The type of the context
+
+output:
+*context.emptyCtx 
+```
 ### WithCancel Context
+* WithCancel **returns a copy of parent** with a new **Done channel**
+* The returned context's **Done channel is closed** when the returned **cancel function is called** or when **the parent context's Done channel is closed**, whichever happens first.
+* **Canceling** this context **releases resources** associated with it, so code should **call cancel** as soon as **the operations running** in this Context **complete**. [See the example](10_context_cancel.go)
+```go
+ctx, cancel := context.WithCancel(context.Background()) // It returns a value of type `*context.cancelCtx`
+
+fmt.Printf("%T\n", ctx) // The type of the context
+fmt.Printf("%T\n", ctx.Done()) // `ctx.Done()` returns a value of type `<-chan struct {}`
+cancel() // It close the channel returned by `ctx.Done()` releasing resources 
+
+output:
+*context.cancelCtx
+<-chan struct {} 
+```
 ### WithDeadline Context
+* **Deadline is a specific time**, that is a time with date, hour, minute and second.
+* WithDeadline **returns a copy of the parent** context with **the deadline** adjusted to be **no later than d**. 
+* If the parent's **deadline is already earlier than d**, WithDeadline(parent, d) is **semantically equivalent to parent**.
+* The returned context's **Done channel is closed** when **the deadline expires**, when **the returned cancel function is called**, or when **the parent context's Done channel is closed**, whichever happens first.
+* **Canceling** this context **releases resources** associated with it, so code should **call cancel** as soon as **the operations running** in this Context **complete**. [See the example](10_context_cancel.go)
+```go
+d := time.Now().Add(time.Second) // The current time plus 1 second as deadline
+ctx, cancel := context.WithDeadline(context.Background(), d) // It returns a value of type `*context.timerCtx`
+
+fmt.Printf("%T\n", ctx) // The type of the context
+fmt.Printf("%T\n", ctx.Done()) // `ctx.Done()` returns a value of type `<-chan struct {}`
+
+time.Sleep(2 * time.Second) // It waits 2 seconds
+fmt.Println(ctx.Err()) // Deadline is reached the channel returned by `ctx.Done()` is also closed with error
+
+cancel() // Cancel has no effect because the channel `ctx.Done()` is already closed
+
+output:
+*context.timerCtx
+<-chan struct {}
+context deadline exceeded
+```
 ### Withtimeout Context
 ### WithValue Context
 
