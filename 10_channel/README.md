@@ -7,7 +7,7 @@
 * **Communication blocks** until **the send can proceed** 
 * **A send** on a **nil** channel **blocks forever**
 ### Receive operator
-* A receive operator **receives** a value ***from a channel** 
+* A receive operator **receives** a value **from a channel** 
 * The **expression blocks** until a **value** is **available**
 * **Receiving** from a **nil** channel **blocks forever**
 ### Close
