@@ -18,7 +18,7 @@
 ## Simple Channels
 A new, initialized channel value can be made using the **built-in** function **make**, which takes the **channel type** and an **optional capacity** as arguments.
 ## Buffer Channels
-* The **capacity**, in number of elements, sets the **size** of the **buffer** in the channel
+* The **capacity**, in number of elements, sets the **size** of the **buffer** in the **channel**
 * If the **capacity** is **zero** or **absent**, the **channel** is **unbuffered** and **communication succeeds only when both a sender and receiver are ready**
 * Otherwise, the **channel** is **buffered** and **communication succeeds without blocking** if **the buffer is not full (sends)** or **not empty (receives)**
 * A **nil** channel is **never ready** for communication
