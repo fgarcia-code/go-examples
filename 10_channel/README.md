@@ -168,7 +168,7 @@
   ``` 
 ### Parent Context
 The function `context.Context()` in the previous examples doesn't exist because the `context.Context` is an interface, to create a root parent Context you can create it with the functions `context.Background()` and `context.TODO()` as explained below.
-#### Background Context
+### Background Context
 * Background **returns** a non-nil, **empty Context**. It is **never** **canceled**, has **no values**, and has **no deadline** 
 * It is **typically used** by the **main function**, **initialization**, and **tests**, and as the **top-level Context** for incoming requests
   ```go
@@ -179,7 +179,7 @@ The function `context.Context()` in the previous examples doesn't exist because 
   output:
   *context.emptyCtx // The context type 
   ```
-#### TODO Context
+### TODO Context
 * TODO **returns** a non-nil, **empty Context**. **Code should use context**
 * TODO **when it's unclear which Context to use** or **it is not yet available** (because the surrounding function has not yet been extended to accept a Context parameter)
 * **TODO is recognized by static analysis tools** that determine whether Contexts are propagated correctly in a program
@@ -233,9 +233,8 @@ output:
 <-chan struct {}  // The channel returned by `Done()`
 context deadline exceeded  // The deadline error
 ```
-### Withtimeout Context
-* It is very similar to WithDeadline, but it **receives** a **duration** as an argument **instead of a time**, the **duration is the amount of time the context will be alive**, it can be milliseconds, seconds, minutes, hours, etc.
-* WithTimeout returns WithDeadline(parent, time.Now().Add(timeout)).
+### WithTimeout Context
+* It is very similar to WithDeadline, but it **receives** a **duration** as an argument **instead of a time**, the **duration is the amount of time the context will be alive**, it can be milliseconds, seconds, minutes, hours, etc
 ```go
 ctx, cancel := context.WithTimeout(context.Background(), time.Second) // It returns a value of type `*context.timerCtx`
 
@@ -243,12 +242,40 @@ fmt.Printf("%T\n", ctx) // The type of the context
 fmt.Printf("%T\n", ctx.Done()) // `ctx.Done()` returns a value of type `<-chan struct {}`
 
 time.Sleep(2 * time.Second) // It waits 2 seconds
-fmt.Println(ctx.Err()) // Timeout is reached and the channel reutrned by `ctx.Done()` is closed with error
+fmt.Println(ctx.Err()) // Timeout is reached and the channel returned by `ctx.Done()` is closed with error
 
-cancel() // Cancel has no effect because the channel `ctx.Done()` is alerady closed
+cancel() // Cancel has no effect because the channel `ctx.Done()` is already closed
+
+output:
+*context.timerCtx // The context type
+<-chan struct {}  // The channel returned by `Done()`
+context deadline exceeded  // The deadline error
 ```
-
-
 ### WithValue Context
+* WithValue **returns** a **copy of parent** in which **the value** associated with **key** is **val**.
+* **Use context Values** only **for request-scoped data** that transits processes and APIs, **not for** passing **optional parameters** to functions.
+* **The provided key** must be **comparable** and should **not be of type string** or **any other built-in type** to **avoid collisions** between packages using context. 
+* Users of WithValue should **define their own types for keys**. 
+* To avoid allocating when assigning to an interface{}, **context keys often have concrete type struct{}**. 
+```go
+type contextKey string  // Define a type `contextKey`
 
+ctx := context.WithValue(context.Background(), contextKey("user"), "John") // It returns a value of type `*context.valueCtx` with a value
+ctx = context.WithValue(ctx, contextKey("session"), "123456789") // It returns a value of type `*context.valueCtx` with a second value
 
+fmt.Printf("%T\n", contextKey("user"))   // The type of the key "user"
+fmt.Printf("%T\n", ctx) // The type of the context
+
+fmt.Println(ctx.Value(contextKey("user")))    // The context value associated with the key "user"
+fmt.Println(ctx.Value(contextKey("session"))) // The context value associated with the key "session"
+
+output:
+main.contextKey // The type of the key
+*context.valueCtx // The context type
+John // The value associated with the key "user"
+123456789 // The value associated with the key "session"
+```
+### Custom and Package Context
+* The context explained before are defined in the package context, but you can implement your own custom context, you only need to implement the `context.Context` interface method set in your custom context type
+* There're also other packages that implements their own custom context, but the concepts is the same as the context in the package `context`
+ 
