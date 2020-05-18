@@ -42,16 +42,16 @@
   close(channel)
   ```
 ## Buffer Channels
-* The **capacity**, in number of elements, sets the **size** of the **buffer** in the **channel**
+* The **capacity**, in number of elements, sets the **size of the buffer** in the channel
 * If the **capacity** is **zero** or **absent**, the **channel** is **unbuffered** and **communication succeeds only when both a sender and receiver are ready**
 * Otherwise, the **channel** is **buffered** and **communication succeeds without blocking** if **the buffer is not full (sends)** or **not empty (receives)**
 * A **nil** channel is **never ready** for communication
   ```go
-  // Buffer channel channel declaration
+  // Buffer channel declaration
   channel := make(chan Type, capacity)
   ```
 ## Directional Channels
-* The optional **<- operator** specifies the **channel direction**, **send** or **receive**. If **no direction** is given, the channel is **bidirectional**. 
+* The optional **<- operator** at declaration, specifies the **channel direction**, **send** or **receive**. If **no direction** is given, the channel is **bidirectional**. 
   ```go
   // Bidirectional channel using short variable declaration
   channel := make(chan Type)
@@ -97,7 +97,7 @@
 3. The respective communication operation is executed.
 4. If the **selected case** is a **short variable declaration** or **an assignment**, **the expressions** are **evaluated** and **the received value** (or values) are **assigned**.
 5. **The statement list** of the selected case **is executed**.
-## ok Idiom
+## ok idiom
 * The value of **ok** is **true** if the **value received** was delivered by a **successful send** operation to the channel, or **false** if it is a **zero value** generated because the channel is **closed** and **empty**.
   ```go
   // ok channel idiom
