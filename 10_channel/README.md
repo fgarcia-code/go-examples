@@ -132,7 +132,7 @@
       Value(key interface{}) interface{}
   }
   ```
-* One use case is for server applications when **incoming requests** to the server should **create a Context**, and **outgoing** calls to **another servers** should **accept a Context**
+* One use case is for server applications, when there are **incoming requests** to the server you should **create a Context**, and when there are **outgoing** calls to **another servers**, these calls should **accept a Context**
   ```go
   // Simple incoming request
   func incomingRequest(w http.ResponseWriter, req *http.Request){ 
@@ -145,7 +145,7 @@
 * **The chain of function** calls between them must **propagate the Context**, **optionally replacing** it with a **derived Context** created using WithCancel, WithDeadline, WithTimeout, or WithValue
   ```go
   func function1(){
-      ctx := context.Context()
+      ctx := context.Context() // It doesn't work
       function2(ctx)   // Chain of function propagates the context
   }
   
@@ -161,7 +161,7 @@
 * When a **Context is canceled**, **all Contexts derived** from it are **also canceled**
 * The WithCancel, WithDeadline, and WithTimeout **functions** take a **Context (the parent)** and **return** a **derived Context (the child)** and a **CancelFunc** 
   ```go
-  parent_ctx := context.Context() // Parent context
+  parent_ctx := context.Context() // Parent context (It doesn't work)
   child_1_ctx, cancel_1 := context.WithCancel(parent_ctx) // Derived Context
   child_2_ctx, cancel_2 := context.WithDeadline(chile_1_ctx, deadline) // Derived Context
   cancel_1() // It cancels child_1_ctx and child_2_ctx
@@ -170,18 +170,18 @@
 The function `context.Context()` in the previous examples doesn't exist because the `context.Context` is an interface, to create a root parent Context you can create it with the functions `context.Background()` and `context.TODO()` as explained below.
 #### Background Context
 * Background **returns** a non-nil, **empty Context**. It is **never** **canceled**, has **no values**, and has **no deadline** 
-* It is typically used by the main function, initialization, and tests, and as the **top-level Context** for incoming requests
+* It is **typically used** by the **main function**, **initialization**, and **tests**, and as the **top-level Context** for incoming requests
   ```go
   ctx := context.Background() // It returns an value of type `*context.emptyCtx`
   
   fmt.Printf("%T\n", ctx) // The type of the context
 
   output:
-  *context.emptyCtx 
+  *context.emptyCtx // The context type 
   ```
 #### TODO Context
 * TODO **returns** a non-nil, **empty Context**. **Code should use context**
-* TODO **when it's unclear which Context to use** or it is not yet available (because the surrounding function has not yet been extended to accept a Context parameter)
+* TODO **when it's unclear which Context to use** or **it is not yet available** (because the surrounding function has not yet been extended to accept a Context parameter)
 * **TODO is recognized by static analysis tools** that determine whether Contexts are propagated correctly in a program
 * **Note:** The best way to start with contexts is using `context.Background()` instead
 ```go
@@ -190,7 +190,7 @@ ctx := context.TODO() // It returns an value of type `*context.emptyCtx`
 fmt.Printf("%T\n", ctx) // The type of the context
 
 output:
-*context.emptyCtx 
+*context.emptyCtx  // The context type
 ```
 ### WithCancel Context
 * WithCancel **returns a copy of parent** with a new **Done channel**
@@ -204,33 +204,51 @@ fmt.Printf("%T\n", ctx.Done()) // `ctx.Done()` returns a value of type `<-chan s
 cancel() // It close the channel returned by `ctx.Done()` releasing resources 
 
 output:
-*context.cancelCtx
-<-chan struct {} 
+*context.cancelCtx // The context type
+<-chan struct {}   // The channel returned by `Done()`
 ```
 ### WithDeadline Context
-* **Deadline is a specific time**, that is a time with date, hour, minute and second.
+* **Deadline is a specific time**, that is, a time with date, hour, minute and second.
 * WithDeadline **returns a copy of the parent** context with **the deadline** adjusted to be **no later than d**. 
 * If the parent's **deadline is already earlier than d**, WithDeadline(parent, d) is **semantically equivalent to parent**.
 * The returned context's **Done channel is closed** when **the deadline expires**, when **the returned cancel function is called**, or when **the parent context's Done channel is closed**, whichever happens first.
 * **Canceling** this context **releases resources** associated with it, so code should **call cancel** as soon as **the operations running** in this Context **complete**. [See the example](10_context_cancel.go)
 ```go
 d := time.Now().Add(time.Second) // The current time plus 1 second as deadline
+fmt.Println(d) // The output is a date
+
 ctx, cancel := context.WithDeadline(context.Background(), d) // It returns a value of type `*context.timerCtx`
 
 fmt.Printf("%T\n", ctx) // The type of the context
 fmt.Printf("%T\n", ctx.Done()) // `ctx.Done()` returns a value of type `<-chan struct {}`
 
 time.Sleep(2 * time.Second) // It waits 2 seconds
-fmt.Println(ctx.Err()) // Deadline is reached the channel returned by `ctx.Done()` is also closed with error
+fmt.Println(ctx.Err()) // Deadline is reached and the channel returned by `ctx.Done()` is closed with error
 
 cancel() // Cancel has no effect because the channel `ctx.Done()` is already closed
 
 output:
-*context.timerCtx
-<-chan struct {}
-context deadline exceeded
+2009-11-10 23:00:01 +0000 UTC m=+1.000000001 // An exaple of deadline time
+*context.timerCtx // The context type
+<-chan struct {}  // The channel returned by `Done()`
+context deadline exceeded  // The deadline error
 ```
 ### Withtimeout Context
+* It is very similar to WithDeadline, but it **receives** a **duration** as an argument **instead of a time**, the **duration is the amount of time the context will be alive**, it can be milliseconds, seconds, minutes, hours, etc.
+* WithTimeout returns WithDeadline(parent, time.Now().Add(timeout)).
+```go
+ctx, cancel := context.WithTimeout(context.Background(), time.Second) // It returns a value of type `*context.timerCtx`
+
+fmt.Printf("%T\n", ctx) // The type of the context
+fmt.Printf("%T\n", ctx.Done()) // `ctx.Done()` returns a value of type `<-chan struct {}`
+
+time.Sleep(2 * time.Second) // It waits 2 seconds
+fmt.Println(ctx.Err()) // Timeout is reached and the channel reutrned by `ctx.Done()` is closed with error
+
+cancel() // Cancel has no effect because the channel `ctx.Done()` is alerady closed
+```
+
+
 ### WithValue Context
 
 
