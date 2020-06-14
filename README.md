@@ -7,17 +7,19 @@
 
 ## Index
 1. [Hello Go!!](00_hello_go)
-2. [Variable declaration](01_declaration)
-3. [Data types](02_types)
-4. [fmt package](03_fmt)
-5. [Control flow](04_control_flow)
-6. [Grouping data](05_group_data)
-7. [Structs](06_struct) 
-8. [Functions](07_function)
-9. [Pointers](08_pointer) 
-9. [Concurrency](09_concurrency) 
-10. [Channels](10_channel)
-11. [Applications](15_util) 
+2. [Code organization](00_packages)
+3. [Variable declaration](01_declaration)
+4. [Data types](02_types)
+5. [fmt package](03_fmt)
+6. [Control flow](04_control_flow)
+7. [Grouping data](05_group_data)
+8. [Structs](06_struct) 
+9. [Functions](07_function)
+10. [Pointers](08_pointer) 
+11. [Concurrency](09_concurrency) 
+12. [Channels](10_channel)
+13. [Error Handling](11_error)
+14. [Applications](15_util) 
 
 ## References
 * Go Lang spec: https://golang.org/ref/spec
